@@ -1816,6 +1816,10 @@ case $kernel-$os in
 		;;
 	*-eabi* | *-gnueabi*)
 		;;
+	none-coff* | none-elf*)
+		# None (no kernel, i.e. freestanding / bare metal),
+		# can be paired with an output format "OS"
+		;;
 	-*)
 		# Blank kernel with real OS is always fine.
 		;;
