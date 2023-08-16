@@ -1744,7 +1744,7 @@ case $os in
 		;;
 	none)
 		;;
-	kernel* | msvc* )
+	kernel* | msvc* | cygnus* )
 		# Restricted further below
 		;;
 	*)
@@ -1763,7 +1763,7 @@ case $kernel-$os in
 		;;
 	managarm-mlibc* | managarm-kernel* )
 		;;
-	windows*-gnu* | windows*-msvc*)
+	windows*-gnu* | windows*-msvc* | windows*-cygnus* )
 		;;
 	-dietlibc* | -newlib* | -musl* | -relibc* | -uclibc* | -mlibc* )
 		# These are just libc implementations, not actual OSes, and thus
@@ -1779,7 +1779,7 @@ case $kernel-$os in
 		echo "Invalid configuration '$1': '$kernel' does not support '$os'." 1>&2
 		exit 1
 		;;
-	*-msvc* )
+	*-msvc* | *-cygnus* )
 		echo "Invalid configuration '$1': '$os' needs 'windows'." 1>&2
 		exit 1
 		;;
