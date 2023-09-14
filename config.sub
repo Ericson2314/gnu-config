@@ -1724,7 +1724,7 @@ case $os in
 	     | udi* | lites* | ieee* | go32* | aux* | hcos* \
 	     | chorusrdb* | cegcc* | glidix* | serenity* \
 	     | cygwin* | msys* | pe* | moss* | proelf* | rtems* \
-	     | midipix* | mingw32* | mingw64* | mint* \
+	     | midipix* | mingw* | mint* \
 	     | uxpv* | beos* | mpeix* | udk* | moxiebox* \
 	     | interix* | uwin* | mks* | rhapsody* | darwin* \
 	     | openstep* | oskit* | conix* | pw32* | nonstopux* \
@@ -1763,7 +1763,7 @@ case $kernel-$os in
 		;;
 	managarm-mlibc* | managarm-kernel* )
 		;;
-	windows*-gnu* | windows*-msvc*)
+	windows*-mingw* | windows*-msvc*)
 		;;
 	-dietlibc* | -newlib* | -musl* | -relibc* | -uclibc* | -mlibc* )
 		# These are just libc implementations, not actual OSes, and thus
