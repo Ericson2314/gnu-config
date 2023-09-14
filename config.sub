@@ -1763,7 +1763,7 @@ case $kernel-$os in
 		;;
 	managarm-mlibc* | managarm-kernel* )
 		;;
-	windows*-gnu* | windows*-msvc*)
+	windows*-msvc*)
 		;;
 	-dietlibc* | -newlib* | -musl* | -relibc* | -uclibc* | -mlibc* )
 		# These are just libc implementations, not actual OSes, and thus
