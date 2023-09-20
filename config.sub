@@ -813,11 +813,11 @@ case $basic_machine in
 		cpu=mips
 		vendor=sgi
 		case $basic_os in
-		    irix*)
-			;;
-		    *)
-			basic_os=irix4
-			;;
+			irix*)
+				;;
+			*)
+				basic_os=irix4
+				;;
 		esac
 		;;
 	miniframe)
@@ -838,16 +838,16 @@ case $basic_machine in
 		cpu=m68k
 		vendor=next
 		case $basic_os in
-		    openstep*)
-		        ;;
-		    nextstep*)
-			;;
-		    ns2*)
-		      basic_os=nextstep2
-			;;
-		    *)
-		      basic_os=nextstep3
-			;;
+			openstep*)
+				;;
+			nextstep*)
+				;;
+			ns2*)
+				basic_os=nextstep2
+				;;
+			*)
+				basic_os=nextstep3
+				;;
 		esac
 		;;
 	np1)
@@ -1486,13 +1486,13 @@ case $os in
 		# particular features comes up, bare metal
 		# configurations are quite functional.
 		case $cpu in
-		    arm*)
-			os=eabi
-			;;
-		    *)
-			os=
-			obj=elf
-			;;
+			arm*)
+				os=eabi
+				;;
+			*)
+				os=
+				obj=elf
+				;;
 		esac
 		;;
 	aout* | coff* | elf* | pe*)
