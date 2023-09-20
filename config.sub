@@ -764,6 +764,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
 help="
 Try '$me --help' for more information."
 
+set -eu
+
 # Parse command line
 while test $# -gt 0 ; do
   case $1 in
@@ -1416,46 +1418,55 @@ esac
 if test x"$basic_os" != x
 then
 
-# First recognize some ad-hoc cases, or perhaps split kernel-os, or else just
-# set os.
+# Split `basic_os` into `kernel_os` and `env` variables.
 obj=
 case $basic_os in
+    # ad-hoc case, slash in config is not allowed. gnu/linux -> linux-gnu
 	gnu/linux*)
-		kernel=linux
-		kernel_os=`echo "$basic_os" | sed -e 's|gnu/linux|gnu|'`
+		kernel_os=`echo "$basic_os" | sed -e 's|gnu/linux|linux-gnu|'`
+		env=
 		;;
-	os2-emx)
-		kernel=os2
-		kernel_os=`echo "$basic_os" | sed -e 's|os2-emx|emx|'`
+
+	# Two cases where the kernel comes before an OS name.
+	os2-emx | nto-qnx*)
+		kernel_os=$basic_os
+		env=
 		;;
-	nto-qnx*)
-		kernel=nto
-		kernel_os=`echo "$basic_os" | sed -e 's|nto-qnx|qnx|'`
-		;;
+
+	# Regular case, split into two vars
 	*-*)
 		# shellcheck disable=SC2162
 		saved_IFS=$IFS
-		IFS="-" read kernel os <<EOF
+		IFS="-" read kernel_os env <<EOF
 $basic_os
 EOF
 		IFS=$saved_IFS
 		;;
+
 	# Default OS when just kernel was specified
 	nto*)
-		kernel=nto
-		kernel_os=`echo "$basic_os" | sed -e 's|nto|qnx|'`
+		kernel_os=`echo "$basic_os" | sed -e 's|nto|nto-qnx|'`
+		env=
+		;;
+
+	# Default libc when just kernel was specified
+	linuxspe*)
+		kernel_os=`echo "$basic_os" | sed -e 's|linuxspe|linux|'`
+		env=gnuspe
 		;;
 	linux*)
-		kernel=linux
-		kernel_os=`echo "$basic_os" | sed -e 's|linux|gnu|'`
+		kernel_os=$basic_os
+		env=gnu
 		;;
 	managarm*)
-		kernel=managarm
-		kernel_os=`echo "$basic_os" | sed -e 's|managarm|mlibc|'`
-		;;
-	*)
-		kernel=
 		kernel_os=$basic_os
+		env=mlibc
+		;;
+
+	# Regular case, treat as OS/kernel, env is blank
+	*)
+		kernel_os=$basic_os
+		env=
 		;;
 esac
 
@@ -1615,7 +1626,8 @@ case $kernel_os in
 		# configurations are quite functional.
 		case $cpu in
 			arm*)
-				kernel_os=eabi
+				kernel_os=
+				env=eabi
 				;;
 			*)
 				kernel_os=
@@ -1625,8 +1637,14 @@ case $kernel_os in
 		;;
 	aout* | coff* | elf* | pe*)
 		# These are machine code file formats, not OSes
-		obj=$kernel_os
 		kernel_os=
+		obj=$basic_os
+		;;
+	eabi*)
+		# These are variation atop kernel, e.g. libc, C ABI, or
+		# other detail.
+		kernel_os=
+		env=$basic_os
 		;;
 	*)
 		# No normalization, but not necessarily accepted, that comes below.
@@ -1645,7 +1663,7 @@ else
 # will signal an error saying that MANUFACTURER isn't an operating
 # system, and we'll never get to this point.
 
-kernel=
+env=
 obj=
 case $cpu-$vendor in
 	score-*)
@@ -1660,8 +1678,8 @@ case $cpu-$vendor in
 		kernel_os=riscix1.2
 		;;
 	arm*-rebel)
-		kernel=linux
-		kernel_os=gnu
+		kernel_os=linux
+		env=gnu
 		;;
 	arm*-semi)
 		kernel_os=
@@ -1848,12 +1866,6 @@ fi
 # Now, validate our (potentially fixed-up) individual pieces (OS, OBJ).
 
 case $kernel_os in
-	# Sometimes we do "kernel-libc", so those need to count as OSes.
-	musl* | newlib* | relibc* | uclibc*)
-		;;
-	# Likewise for "kernel-abi"
-	eabi* | gnueabi*)
-		;;
 	# VxWorks passes extra cpu info in the 4th filed.
 	simlinux | simwindows | spe)
 		;;
@@ -1863,7 +1875,7 @@ case $kernel_os in
 	# Now accept the basic system types.
 	# The portable systems comes first.
 	# Each alternative MUST end in a * to match a version number.
-	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
+	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
@@ -1894,33 +1906,74 @@ case $kernel_os in
 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
 	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr* \
-	     | fiwix* | mlibc* | cos* | mbr* )
+	     | fiwix* | cos* | mbr* | managarm* )
 		;;
 	# This one is extra strict with allowed versions
 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
 		# Don't forget version if it is 3.2v4 or newer.
 		;;
+	nto-qnx*)
+		# QNX, same as qnx, but also mentioning the Neutrino kernel.
+		;;
+	# These are not Full OSes, but they are kernels from which one
+	# can make OSes.
+	#
+	# The kernel still determines the syscall ABI, not the rest of
+	# the OS, however, os this is what config cares most about.
+	linux* | kfreebsd* | kopensolaris*)
+		;;
 	none)
 		;;
-	kernel* | msvc* )
-		# Restricted further below
-		;;
 	'')
-		if test x"$obj" = x
+		if test x"$env$obj" = x
 		then
-			invalid_config "$1" "Blank OS only allowed with explicit machine code file format"
+			invalid_config "$1" "Blank OS only allowed with explicit machine code file format or ABI"
 		fi
 		;;
 	*)
-		invalid_config "$1" "OS '$kernel_os' not recognized"
+		invalid_config "$1" "OS or kernel '$kernel_os' not recognized"
 		;;
+esac
+
+case $env in
+	# Sometimes we do "kernel-libc", so those need to count as OSes.
+	musl* | newlib* | relibc* | uclibc* | mlibc*)
+		;;
+	# Likewise for "kernel-abi"
+	eabi* | androideabi* | gnueabi*)
+		;;
+	# "gnu" means GNU libc in this context
+	gnu*)
+		;;
+	# linux variant with special libc called bionic.
+	android*)
+		;;
+	kernel)
+		# for managarm
+		;;
+	simlinux | simwindows | spe)
+		# for vxworks
+		;;
+	msvc)
+		# for windows
+		;;
+	# These are machine code file formats
+	aout* | coff* | elf* | pe*)
+		obj=$env
+		env=
+		;;
+	# empty is fine, it is optional
+	'')
+		;;
+	*)
+		invalid_config "$1" "libc / ABI '$env' not recognized"
 esac
 
 case $obj in
 	aout* | coff* | elf* | pe*)
 		;;
+	# empty is fine, it is optional
 	'')
-		# empty is fine
 		;;
 	*)
 		invalid_config "$1" "Machine code format '$obj' not recognized"
@@ -1942,9 +1995,11 @@ esac
 
 # As a final step for OS-related things, validate the OS-kernel combination
 # (given a valid OS), if there is a kernel.
-case $kernel-$kernel_os-$obj in
+case $kernel_os-$env-$obj in
 	linux-gnu*- | linux-dietlibc*- | linux-android*- | linux-newlib*- \
 		   | linux-musl*- | linux-relibc*- | linux-uclibc*- | linux-mlibc*- )
+		;;
+	linuxspe-gnuspe*-)
 		;;
 	uclinux-uclibc*- )
 		;;
@@ -1952,42 +2007,24 @@ case $kernel-$kernel_os-$obj in
 		;;
 	windows*-msvc*-)
 		;;
-	-dietlibc*- | -newlib*- | -musl*- | -relibc*- | -uclibc*- | -mlibc*- )
-		# These are just libc implementations, not actual OSes, and thus
-		# require a kernel.
-		invalid_config "$1" "libc '$kernel_os' needs explicit kernel."
-		;;
-	-kernel*- )
-		invalid_config "$1" "'$kernel_os' needs explicit kernel."
-		;;
-	*-kernel*- )
-		invalid_config "$1" "'$kernel' does not support '$kernel_os'."
-		;;
-	*-msvc*- )
-		invalid_config "$1" "'$kernel_os' needs 'windows'."
-		;;
 	kfreebsd*-gnu*- | kopensolaris*-gnu*-)
 		;;
 	vxworks-simlinux- | vxworks-simwindows- | vxworks-spe-)
 		;;
-	nto-qnx*-)
-		;;
-	os2-emx-)
-		;;
 	*-eabi*- | *-gnueabi*-)
 		;;
-	none--*)
+	none-eabi*-* | none--*)
 		# None (no kernel, i.e. freestanding / bare metal),
-		# can be paired with an machine code file format
+		# can be paired with an machine code file format or ABI.
 		;;
-	-*-)
-		# Blank kernel with real OS is always fine.
+	*--)
+		# Blank kernel/OS is always fine.
 		;;
 	--*)
 		# Blank kernel and OS with real machine code file format is always fine.
 		;;
 	*-*-*)
-		invalid_config "$1" "Kernel '$kernel' not known to work with OS '$kernel_os'."
+		invalid_config "$1" "OS or Kernel '$kernel_os' not known to work with libc / other variant '$env'."
 		;;
 esac
 
@@ -2004,7 +2041,7 @@ case $vendor in
 		;;
 esac
 
-echo "$cpu-$vendor${kernel:+-$kernel}${kernel_os:+-$kernel_os}${obj:+-$obj}"
+echo "$cpu-$vendor${kernel_os:+-$kernel_os}${env:+-$env}${obj:+-$obj}"
 exit
 
 # Local variables:
