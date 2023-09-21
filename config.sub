@@ -168,6 +168,21 @@ validate_cpu () {
 	esac
 }
 
+# Recognize the extra canonical CPU types for the vendor "tandem"
+#
+# Param 1: CPU
+validate_tandem_cpu () {
+	case "$1" in
+		neo | nse | nsr | nsv | nsx)
+			return 0
+			;;
+
+		*)
+			return 1
+			;;
+	esac
+}
+
 # Handle a single-field shorthand.
 #
 # Param 1: The single field
@@ -1362,25 +1377,11 @@ case $cpu-$vendor in
 	crx-*)
 		basic_os=${basic_os:-elf}
 		;;
-	neo-tandem)
-		cpu=neo
-		vendor=tandem
-		;;
-	nse-tandem)
-		cpu=nse
-		vendor=tandem
-		;;
-	nsr-tandem)
-		cpu=nsr
-		vendor=tandem
-		;;
-	nsv-tandem)
-		cpu=nsv
-		vendor=tandem
-		;;
-	nsx-tandem)
-		cpu=nsx
-		vendor=tandem
+	*-tandem)
+		# Extra CPU types are supported with this vendor
+		validate_tandem_cpu "$cpu" \
+			|| validate_cpu "$cpu" \
+			|| invalid_config "$1" "machine '$cpu-$vendor' not recognized"
 		;;
 	mipsallegrexel-sony)
 		cpu=mipsallegrexel
