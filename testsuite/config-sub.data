@@ -548,6 +548,9 @@ nonstopux					mips-compaq-nonstopux
 np1						np1-gould-sysv
 ns16k						ns16k-unknown-none
 ns32k						ns32k-unknown-none
+neo-tandem-nsk					neo-tandem-nsk
+nse-tandem-nsk					nse-tandem-nsk
+nsr-tandem-nsk					nsr-tandem-nsk
 nsv-tandem-nsk					nsv-tandem-nsk
 nsx-tandem-nsk					nsx-tandem-nsk
 nvptx						nvptx-unknown-none
