@@ -59,6 +59,190 @@ timestamp='2023-09-19'
 # even some reasonably current systems (Solaris 10 as case-in-point) still
 # have a pre-POSIX /bin/sh.
 
+###########
+# Functions
+###########
+
+# Recognize the canonical CPU types
+#
+# Param 1: CPU
+validate_cpu () {
+	case "$1" in
+		1750a | 580 \
+		| a29k \
+		| aarch64 | aarch64_be | aarch64c | arm64ec \
+		| abacus \
+		| alpha | alphaev[4-8] | alphaev56 | alphaev6[78] \
+		| alpha64 | alpha64ev[4-8] | alpha64ev56 | alpha64ev6[78] \
+		| alphapca5[67] | alpha64pca5[67] \
+		| am33_2.0 \
+		| amdgcn \
+		| arc | arceb | arc32 | arc64 \
+		| arm | arm[lb]e | arme[lb] | armv* \
+		| avr | avr32 \
+		| asmjs \
+		| ba \
+		| be32 | be64 \
+		| bfin | bpf | bs2000 \
+		| c[123]* | c30 | [cjt]90 | c4x \
+		| c8051 | clipper | craynv | csky | cydra \
+		| d10v | d30v | dlx | dsp16xx \
+		| e2k | elxsi | epiphany \
+		| f30[01] | f700 | fido | fr30 | frv | ft32 | fx80 \
+		| javascript \
+		| h8300 | h8500 \
+		| hppa | hppa1.[01] | hppa2.0 | hppa2.0[nw] | hppa64 \
+		| hexagon \
+		| i370 | i*86 | i860 | i960 | ia16 | ia64 \
+		| ip2k | iq2000 \
+		| k1om \
+		| kvx \
+		| le32 | le64 \
+		| lm32 \
+		| loongarch32 | loongarch64 \
+		| m32c | m32r | m32rle \
+		| m5200 | m68000 | m680[012346]0 | m68360 | m683?2 | m68k \
+		| m6811 | m68hc11 | m6812 | m68hc12 | m68hcs12x \
+		| m88110 | m88k | maxq | mb | mcore | mep | metag \
+		| microblaze | microblazeel \
+		| mips* \
+		| mmix \
+		| mn10200 | mn10300 \
+		| moxie \
+		| mt \
+		| msp430 \
+		| nds32 | nds32le | nds32be \
+		| nfp \
+		| nios | nios2 | nios2eb | nios2el \
+		| none | np1 | ns16k | ns32k | nvptx \
+		| open8 \
+		| or1k* \
+		| or32 \
+		| orion \
+		| picochip \
+		| pdp10 | pdp11 | pj | pjl | pn | power \
+		| powerpc | powerpc64 | powerpc64le | powerpcle | powerpcspe \
+		| pru \
+		| pyramid \
+		| riscv | riscv32 | riscv32be | riscv64 | riscv64be \
+		| rl78 | romp | rs6000 | rx \
+		| s390 | s390x \
+		| score \
+		| sh | shl \
+		| sh[1234] | sh[24]a | sh[24]ae[lb] | sh[23]e | she[lb] | sh[lb]e \
+		| sh[1234]e[lb] |  sh[12345][lb]e | sh[23]ele | sh64 | sh64le \
+		| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet \
+		| sparclite \
+		| sparcv8 | sparcv9 | sparcv9b | sparcv9v | sv1 | sx* \
+		| spu \
+		| tahoe \
+		| thumbv7* \
+		| tic30 | tic4x | tic54x | tic55x | tic6x | tic80 \
+		| tron \
+		| ubicom32 \
+		| v70 | v850 | v850e | v850e1 | v850es | v850e2 | v850e2v3 \
+		| vax \
+		| visium \
+		| w65 \
+		| wasm32 | wasm64 \
+		| we32k \
+		| x86 | x86_64 | xc16x | xgate | xps100 \
+		| xstormy16 | xtensa* \
+		| ymp \
+		| z8k | z80)
+			return 0
+			;;
+
+		*)
+			return 1
+			;;
+	esac
+}
+
+# Choose a default vendor given a CPU and OS types
+#
+# Param 1: CPU
+# Param 2: OS
+#
+# Sets: vendor
+default_vendor_from_cpu_os () {
+	case $1-$2 in
+		*-riscix*)
+			vendor=acorn
+			;;
+		*-sunos*)
+			vendor=sun
+			;;
+		*-cnk* | *-aix*)
+			vendor=ibm
+			;;
+		*-beos*)
+			vendor=be
+			;;
+		*-hpux*)
+			vendor=hp
+			;;
+		*-mpeix*)
+			vendor=hp
+			;;
+		*-hiux*)
+			vendor=hitachi
+			;;
+		*-unos*)
+			vendor=crds
+			;;
+		*-dgux*)
+			vendor=dg
+			;;
+		*-luna*)
+			vendor=omron
+			;;
+		*-genix*)
+			vendor=ns
+			;;
+		*-clix*)
+			vendor=intergraph
+			;;
+		*-mvs* | *-opened*)
+			vendor=ibm
+			;;
+		*-os400*)
+			vendor=ibm
+			;;
+		s390-* | s390x-*)
+			vendor=ibm
+			;;
+		*-ptx*)
+			vendor=sequent
+			;;
+		*-tpf*)
+			vendor=ibm
+			;;
+		*-vxsim* | *-vxworks* | *-windiss*)
+			vendor=wrs
+			;;
+		*-aux*)
+			vendor=apple
+			;;
+		*-hms*)
+			vendor=hitachi
+			;;
+		*-mpw* | *-macos*)
+			vendor=apple
+			;;
+		*-*mint | *-mint[0-9]* | *-*MiNT | *-MiNT[0-9]*)
+			vendor=atari
+			;;
+		*-vos*)
+			vendor=stratus
+			;;
+	esac
+}
+
+##################
+# Main entry point
+##################
+
 me=`echo "$0" | sed -e 's,.*/,,'`
 
 usage="\
@@ -1178,96 +1362,10 @@ case $cpu-$vendor in
 	*)
 		# Recognize the canonical CPU types that are allowed with any
 		# company name.
-		case $cpu in
-			1750a | 580 \
-			| a29k \
-			| aarch64 | aarch64_be | aarch64c | arm64ec \
-			| abacus \
-			| alpha | alphaev[4-8] | alphaev56 | alphaev6[78] \
-			| alpha64 | alpha64ev[4-8] | alpha64ev56 | alpha64ev6[78] \
-			| alphapca5[67] | alpha64pca5[67] \
-			| am33_2.0 \
-			| amdgcn \
-			| arc | arceb | arc32 | arc64 \
-			| arm | arm[lb]e | arme[lb] | armv* \
-			| avr | avr32 \
-			| asmjs \
-			| ba \
-			| be32 | be64 \
-			| bfin | bpf | bs2000 \
-			| c[123]* | c30 | [cjt]90 | c4x \
-			| c8051 | clipper | craynv | csky | cydra \
-			| d10v | d30v | dlx | dsp16xx \
-			| e2k | elxsi | epiphany \
-			| f30[01] | f700 | fido | fr30 | frv | ft32 | fx80 \
-			| javascript \
-			| h8300 | h8500 \
-			| hppa | hppa1.[01] | hppa2.0 | hppa2.0[nw] | hppa64 \
-			| hexagon \
-			| i370 | i*86 | i860 | i960 | ia16 | ia64 \
-			| ip2k | iq2000 \
-			| k1om \
-			| kvx \
-			| le32 | le64 \
-			| lm32 \
-			| loongarch32 | loongarch64 \
-			| m32c | m32r | m32rle \
-			| m5200 | m68000 | m680[012346]0 | m68360 | m683?2 | m68k \
-			| m6811 | m68hc11 | m6812 | m68hc12 | m68hcs12x \
-			| m88110 | m88k | maxq | mb | mcore | mep | metag \
-			| microblaze | microblazeel \
-			| mips* \
-			| mmix \
-			| mn10200 | mn10300 \
-			| moxie \
-			| mt \
-			| msp430 \
-			| nds32 | nds32le | nds32be \
-			| nfp \
-			| nios | nios2 | nios2eb | nios2el \
-			| none | np1 | ns16k | ns32k | nvptx \
-			| open8 \
-			| or1k* \
-			| or32 \
-			| orion \
-			| picochip \
-			| pdp10 | pdp11 | pj | pjl | pn | power \
-			| powerpc | powerpc64 | powerpc64le | powerpcle | powerpcspe \
-			| pru \
-			| pyramid \
-			| riscv | riscv32 | riscv32be | riscv64 | riscv64be \
-			| rl78 | romp | rs6000 | rx \
-			| s390 | s390x \
-			| score \
-			| sh | shl \
-			| sh[1234] | sh[24]a | sh[24]ae[lb] | sh[23]e | she[lb] | sh[lb]e \
-			| sh[1234]e[lb] |  sh[12345][lb]e | sh[23]ele | sh64 | sh64le \
-			| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet \
-			| sparclite \
-			| sparcv8 | sparcv9 | sparcv9b | sparcv9v | sv1 | sx* \
-			| spu \
-			| tahoe \
-			| thumbv7* \
-			| tic30 | tic4x | tic54x | tic55x | tic6x | tic80 \
-			| tron \
-			| ubicom32 \
-			| v70 | v850 | v850e | v850e1 | v850es | v850e2 | v850e2v3 \
-			| vax \
-			| visium \
-			| w65 \
-			| wasm32 | wasm64 \
-			| we32k \
-			| x86 | x86_64 | xc16x | xgate | xps100 \
-			| xstormy16 | xtensa* \
-			| ymp \
-			| z8k | z80)
-				;;
-
-			*)
-				echo "Invalid configuration '$1': machine '$cpu-$vendor' not recognized" 1>&2
-				exit 1
-				;;
-		esac
+		if ! validate_cpu "$cpu"; then
+			echo "Invalid configuration '$1': machine '$cpu-$vendor' not recognized" 1>&2
+			exit 1
+		fi
 		;;
 esac
 
@@ -1875,77 +1973,7 @@ esac
 # manufacturer.  We pick the logical manufacturer.
 case $vendor in
 	unknown)
-		case $cpu-$os in
-			*-riscix*)
-				vendor=acorn
-				;;
-			*-sunos*)
-				vendor=sun
-				;;
-			*-cnk* | *-aix*)
-				vendor=ibm
-				;;
-			*-beos*)
-				vendor=be
-				;;
-			*-hpux*)
-				vendor=hp
-				;;
-			*-mpeix*)
-				vendor=hp
-				;;
-			*-hiux*)
-				vendor=hitachi
-				;;
-			*-unos*)
-				vendor=crds
-				;;
-			*-dgux*)
-				vendor=dg
-				;;
-			*-luna*)
-				vendor=omron
-				;;
-			*-genix*)
-				vendor=ns
-				;;
-			*-clix*)
-				vendor=intergraph
-				;;
-			*-mvs* | *-opened*)
-				vendor=ibm
-				;;
-			*-os400*)
-				vendor=ibm
-				;;
-			s390-* | s390x-*)
-				vendor=ibm
-				;;
-			*-ptx*)
-				vendor=sequent
-				;;
-			*-tpf*)
-				vendor=ibm
-				;;
-			*-vxsim* | *-vxworks* | *-windiss*)
-				vendor=wrs
-				;;
-			*-aux*)
-				vendor=apple
-				;;
-			*-hms*)
-				vendor=hitachi
-				;;
-			*-mpw* | *-macos*)
-				vendor=apple
-				;;
-			*-*mint | *-mint[0-9]* | *-*MiNT | *-MiNT[0-9]*)
-				vendor=atari
-				;;
-			*-vos*)
-				vendor=stratus
-				;;
-		esac
+		default_vendor_from_cpu_os "$cpu" "$os"
 		;;
 esac
 
