@@ -63,6 +63,15 @@ timestamp='2023-09-19'
 # Functions
 ###########
 
+# Invalid configuration; display a message and exit
+#
+# Param 1: configuration
+# Param 2: message
+invalid_config () {
+	echo "Invalid configuration '$1': $2" 1>&2
+	exit 1
+}
+
 # Recognize the canonical CPU types
 #
 # Param 1: CPU
@@ -314,8 +323,7 @@ IFS=$saved_IFS
 # Separate into logical components for further validation
 case $1 in
 	*-*-*-*-*)
-		echo "Invalid configuration '$1': more than four components" >&2
-		exit 1
+		invalid_config "$1" "more than four components"
 		;;
 	*-*-*-*)
 		basic_machine=$field1-$field2
@@ -1362,10 +1370,8 @@ case $cpu-$vendor in
 	*)
 		# Recognize the canonical CPU types that are allowed with any
 		# company name.
-		if ! validate_cpu "$cpu"; then
-			echo "Invalid configuration '$1': machine '$cpu-$vendor' not recognized" 1>&2
-			exit 1
-		fi
+		validate_cpu "$cpu" \
+			|| invalid_config "$1" "machine '$cpu-$vendor' not recognized"
 		;;
 esac
 
@@ -1878,12 +1884,11 @@ case $os in
 	'')
 		if test x"$obj" = x
 		then
-			echo "Invalid configuration '$1': Blank OS only allowed with explicit machine code file format" 1>&2
+			invalid_config "$1" "Blank OS only allowed with explicit machine code file format"
 		fi
 		;;
 	*)
-		echo "Invalid configuration '$1': OS '$os' not recognized" 1>&2
-		exit 1
+		invalid_config "$1" "OS '$os' not recognized"
 		;;
 esac
 
@@ -1894,8 +1899,7 @@ case $obj in
 		# empty is fine
 		;;
 	*)
-		echo "Invalid configuration '$1': Machine code format '$obj' not recognized" 1>&2
-		exit 1
+		invalid_config "$1" "Machine code format '$obj' not recognized"
 		;;
 esac
 
@@ -1908,8 +1912,7 @@ case $cpu-$os in
 	javascript-ghcjs)
 		;;
 	javascript-* | *-ghcjs)
-		echo "Invalid configuration '$1': cpu '$cpu' is not valid with os '$os$obj'" 1>&2
-		exit 1
+		invalid_config "$1" "cpu '$cpu' is not valid with os '$os$obj'"
 		;;
 esac
 
@@ -1928,20 +1931,16 @@ case $kernel-$os-$obj in
 	-dietlibc*- | -newlib*- | -musl*- | -relibc*- | -uclibc*- | -mlibc*- )
 		# These are just libc implementations, not actual OSes, and thus
 		# require a kernel.
-		echo "Invalid configuration '$1': libc '$os' needs explicit kernel." 1>&2
-		exit 1
+		invalid_config "$1" "libc '$os' needs explicit kernel."
 		;;
 	-kernel*- )
-		echo "Invalid configuration '$1': '$os' needs explicit kernel." 1>&2
-		exit 1
+		invalid_config "$1" "'$os' needs explicit kernel."
 		;;
 	*-kernel*- )
-		echo "Invalid configuration '$1': '$kernel' does not support '$os'." 1>&2
-		exit 1
+		invalid_config "$1" "'$kernel' does not support '$os'."
 		;;
 	*-msvc*- )
-		echo "Invalid configuration '$1': '$os' needs 'windows'." 1>&2
-		exit 1
+		invalid_config "$1" "'$os' needs 'windows'."
 		;;
 	kfreebsd*-gnu*- | kopensolaris*-gnu*-)
 		;;
@@ -1964,8 +1963,7 @@ case $kernel-$os-$obj in
 		# Blank kernel and OS with real machine code file format is always fine.
 		;;
 	*-*-*)
-		echo "Invalid configuration '$1': Kernel '$kernel' not known to work with OS '$os'." 1>&2
-		exit 1
+		invalid_config "$1" "Kernel '$kernel' not known to work with OS '$os'."
 		;;
 esac
 
