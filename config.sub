@@ -631,81 +631,90 @@ single_field () {
 	esac
 }
 
-# Choose a default vendor given a CPU and OS types
+# Choose a default vendor given a CPU type
 #
 # Param 1: CPU
-# Param 2: OS
 #
 # Sets: vendor
-default_vendor_from_cpu_os () {
-	case $1-$2 in
-		*-riscix*)
+default_vendor_from_cpu() {
+	case $1 in
+		s390 | s390x)
+			vendor=ibm
+			;;
+	esac
+}
+
+# Choose a default vendor given an OS type
+#
+# Param 1: OS
+#
+# Sets: vendor
+default_vendor_from_os() {
+	case $1 in
+		riscix*)
 			vendor=acorn
 			;;
-		*-sunos*)
+		sunos*)
 			vendor=sun
 			;;
-		*-cnk* | *-aix*)
+		cnk* | aix*)
 			vendor=ibm
 			;;
-		*-beos*)
+		beos*)
 			vendor=be
 			;;
-		*-hpux*)
+		hpux*)
 			vendor=hp
 			;;
-		*-mpeix*)
+		mpeix*)
 			vendor=hp
 			;;
-		*-hiux*)
+		hiux*)
 			vendor=hitachi
 			;;
-		*-unos*)
+		unos*)
 			vendor=crds
 			;;
-		*-dgux*)
+		dgux*)
 			vendor=dg
 			;;
-		*-luna*)
+		luna*)
 			vendor=omron
 			;;
-		*-genix*)
+		genix*)
 			vendor=ns
 			;;
-		*-clix*)
+		clix*)
 			vendor=intergraph
 			;;
-		*-mvs* | *-opened*)
+		mvs* | opened*)
 			vendor=ibm
 			;;
-		*-os400*)
+		os400*)
 			vendor=ibm
 			;;
-		s390-* | s390x-*)
-			vendor=ibm
-			;;
-		*-ptx*)
+		ptx*)
 			vendor=sequent
 			;;
-		*-tpf*)
+		tpf*)
 			vendor=ibm
 			;;
-		*-vxsim* | *-vxworks* | *-windiss*)
+		vxsim* | vxworks* | windiss*)
 			vendor=wrs
 			;;
-		*-aux*)
+		aux*)
 			vendor=apple
 			;;
-		*-hms*)
+		hms*)
 			vendor=hitachi
 			;;
-		*-mpw* | *-macos*)
+		mpw* | macos*)
 			vendor=apple
 			;;
-		*-*mint | *-mint[0-9]* | *-*MiNT | *-MiNT[0-9]*)
+		mint | mint[0-9]* | MiNT | MiNT[0-9]*)
 			vendor=atari
 			;;
-		*-vos*)
+		vos*)
 			vendor=stratus
 			;;
 	esac
@@ -1985,7 +1994,12 @@ esac
 # manufacturer.  We pick the logical manufacturer.
 case $vendor in
 	unknown)
-		default_vendor_from_cpu_os "$cpu" "$os"
+		default_vendor_from_cpu "$cpu"
+		;;
+esac
+case $vendor in
+	unknown)
+		default_vendor_from_os "$os"
 		;;
 esac
 
