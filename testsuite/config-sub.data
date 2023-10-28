@@ -854,6 +854,7 @@ v850e2v3-elf					v850e2v3-unknown-elf
 v850es						v850es-unknown-none
 v850es-elf					v850es-unknown-elf
 vax						vax-dec-ultrix4.2
+vc4-unknown-none-elf				vc4-unknown-none-elf
 vaxv						vax-dec-sysv
 visium						visium-unknown-none
 visium-elf					visium-unknown-elf
